@@ -2252,7 +2252,7 @@ void StackOpForward(const nnvm::NodeAttrs& attrs,
   int axis = CheckAxis(param.axis, outputs[0].ndim());
 
   Stream<xpu> *s = ctx.get_stream<xpu>();
-  MSHADOW_TYPE_SWITCH(outputs[0].type_flag_, DType, {
+  MSHADOW_TYPE_SWITCH_WITH_BOOL(outputs[0].type_flag_, DType, {
     std::vector<Tensor<xpu, 3, DType> > data(inputs.size());
     Tensor<xpu, 3, DType> out;
     size_t leading = 1, trailing = 1;
@@ -2286,7 +2286,7 @@ void StackOpBackward(const nnvm::NodeAttrs& attrs,
   int axis = CheckAxis(param.axis, inputs[0].ndim());
 
   Stream<xpu> *s = ctx.get_stream<xpu>();
-  MSHADOW_TYPE_SWITCH(inputs[0].type_flag_, DType, {
+  MSHADOW_TYPE_SWITCH_WITH_BOOL(inputs[0].type_flag_, DType, {
     std::vector<Tensor<xpu, 3, DType> > grad_in(outputs.size());
     Tensor<xpu, 3, DType> grad;
     size_t leading = 1, trailing = 1;

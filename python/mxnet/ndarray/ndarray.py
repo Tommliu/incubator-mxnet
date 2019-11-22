@@ -3040,23 +3040,29 @@ def _is_advanced_index(idx):
 def get_indexing_dispatch_code(key):
     """Returns a dispatch code for calling basic or advanced indexing functions."""
     assert isinstance(key, tuple)
+    num_bools = 0
+    basic_indexing = True
 
     for idx in key:
         if isinstance(idx, (NDArray, np.ndarray, list, tuple)):
             if getattr(idx, 'dtype', None) == np.bool_:
-                raise TypeError('ndarray indexing does not support boolean ndarray'
-                                ' in a tuple of indices. Only single boolean ndarray'
-                                ' as an index is supported.')
-            return _NDARRAY_ADVANCED_INDEXING
+                num_bools += 1
+            basic_indexing = False
         elif sys.version_info[0] > 2 and isinstance(idx, range):
-            return _NDARRAY_ADVANCED_INDEXING
+            basic_indexing = False
         elif not (isinstance(idx, (py_slice, integer_types)) or idx is None):
             raise ValueError(
                 'NDArray does not support slicing with key {} of type {}.'
                 ''.format(idx, type(idx))
             )
 
-    return _NDARRAY_BASIC_INDEXING
+    if basic_indexing and num_bools == 0:
+        return _NDARRAY_BASIC_INDEXING
+    elif not basic_indexing and num_bools == 0:
+        return _NDARRAY_ADVANCED_INDEXING
+    else:
+        raise TypeError('ndarray indexing does not support boolean ndarray'
+                        ' in a tuple of complex indices.')
 
 
 def _get_index_range(start, stop, length, step=1):
