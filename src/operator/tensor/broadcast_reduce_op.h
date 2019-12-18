@@ -593,14 +593,14 @@ void SearchAxisCompute(const nnvm::NodeAttrs& attrs,
   }
   if (input.shape_.Size() == 0U) return;  // zero-size tensor
   mxnet::TShape shape = AxisShapeCompact(input.shape_, &axis, false);
-  MSHADOW_REAL_TYPE_SWITCH(outputs[0].type_flag_, DType, {
-    Tensor<xpu, 2, DType> out = outputs[0].get_with_shape<xpu, 2, DType>(
-      Shape2(shape[0], shape[2]), s);
-    Tensor<xpu, 3, DType> in = input.get_with_shape<xpu, 3, DType>(
-      shape.get<3>(), s);
-    CHECK(req[0] != kAddTo) << "AddTo is not supported";
-    ASSIGN_DISPATCH(out, req[0], (reduce_with_axis<reducer, true>(in, 1)));
-  });
+    MSHADOW_TYPE_SWITCH(inputs[0].type_flag_, DType, {
+      Tensor<xpu, 2, DType> out = outputs[0].get_with_shape<xpu, 2, DType>(
+        Shape2(shape[0], shape[2]), s);
+      Tensor<xpu, 3, DType> in = input.get_with_shape<xpu, 3, DType>(
+        shape.get<3>(), s);
+      CHECK(req[0] != kAddTo) << "AddTo is not supported";
+      ASSIGN_DISPATCH(out, req[0], (reduce_with_axis<reducer, true>(in, 1)));
+    });
 }
 
 template<typename xpu, typename reducer, bool safe_acc, bool normalize = false,
