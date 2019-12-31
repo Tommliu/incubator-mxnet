@@ -40,7 +40,7 @@ __all__ = ['shape', 'zeros', 'zeros_like', 'ones', 'ones_like', 'full', 'full_li
            'blackman', 'flip', 'around', 'round', 'hypot', 'bitwise_xor', 'bitwise_or', 'rad2deg', 'deg2rad',
            'unique', 'lcm', 'tril', 'identity', 'take', 'ldexp', 'vdot', 'inner', 'outer', 'equal', 'not_equal',
            'greater', 'less', 'greater_equal', 'less_equal', 'hsplit', 'rot90', 'einsum', 'true_divide', 'nonzero',
-           'shares_memory', 'may_share_memory', 'diff', 'resize', 'nan_to_num', 'where', 'bincount']
+           'percentile', 'shares_memory', 'may_share_memory', 'diff', 'resize', 'nan_to_num', 'where', 'bincount']
 
 
 @set_module('mxnet.ndarray.numpy')
@@ -5710,6 +5710,77 @@ def nonzero(a):
     """
     out = _npi.nonzero(a).transpose()
     return tuple([out[i] for i in range(len(out))])
+
+
+@set_module('mxnet.ndarray.numpy')
+def percentile(a, q, axis=None, out=None, overwrite_input=None, interpolation='linear', keepdims=False):
+    """
+    Compute the q-th percentile of the data along the specified axis.
+    Returns the q-th percentile(s) of the array elements.
+
+    Parameters
+    ----------
+    a : array_like
+        Input array
+    q : array_like
+        Percentile or sequence of percentiles to compute.
+    axis : {int, tuple of int, None}, optional
+        Axis or axes along which the percentiles are computed. The default is to
+        compute the percentile(s) along a flattened version of the array.
+    out : ndarray, optional
+        Alternative output array in which to place the result. It must have the same
+        shape and buffer length as the expected output, but the type (of the output)
+        will be cast if necessary.
+    overwrite_input : bool, optional (Not supported yet)
+        If True, then allow the input array a to be modified by intermediate calculations,
+        to save memory. In this case, the contents of the input a after this function
+        completes is undefined.
+    interpolation : {‘linear’, ‘lower’, ‘higher’, ‘midpoint’, ‘nearest’}
+        This optional parameter specifies the interpolation method to use when the
+        desired percentile lies between two data points i < j:
+        ‘linear’: i + (j - i) * fraction, where fraction is the fractional part of the
+        index surrounded by i and j.
+        ‘lower’: i.
+        ‘higher’: j.
+        ‘nearest’: i or j, whichever is nearest.
+        ‘midpoint’: (i + j) / 2.
+    keepdims : bool, optional
+        If this is set to True, the axes which are reduced are left in the result as
+        dimensions with size one. With this option, the result will broadcast
+        correctly against the original array a.
+
+    Returns
+    -------
+    percentile : scalar or ndarray
+        Output array.
+
+    Examples
+    --------
+    >>> a = np.array([[10, 7, 4], [3, 2, 1]])
+    >>> a
+    array([[10,  7,  4],
+        [ 3,  2,  1]])
+    >>> np.percentile(a, np.array(50))
+    array(3.5)
+    >>> np.percentile(a, np.array(50), axis=0)
+    array([6.5, 4.5, 2.5])
+    >>> np.percentile(a, np.array(50), axis=1)
+    array([7.,  2.])
+    >>> np.percentile(a, np.array(50), axis=1, keepdims=True)
+    array([[7.],
+        [2.]])
+    
+    >>> m = np.percentile(a, np.array(50), axis=0)
+    >>> out = np.zeros_like(m)
+    >>> np.percentile(a, np.array(50), axis=0, out=out)
+    array([6.5, 4.5, 2.5])
+    >>> m
+    array([6.5, 4.5, 2.5]) 
+    """
+    if overwrite_input is not None:
+        raise NotImplementedError('overwrite_input is not supported yet')
+    return _npi.percentile(a, q, axis=axis, interpolation=interpolation,
+                           keepdims=keepdims, out=out)
 
 
 @set_module('mxnet.ndarray.numpy')
