@@ -40,9 +40,13 @@ inline bool NumpyBinaryScalarType(const nnvm::NodeAttrs& attrs,
                            std::vector<int>* out_attrs) {
   CHECK_EQ(in_attrs->size(), 1U);
   CHECK_EQ(out_attrs->size(), 1U);
-  TYPE_ASSIGN_CHECK(*out_attrs, 0, in_attrs->at(0));
-  TYPE_ASSIGN_CHECK(*in_attrs, 0, out_attrs->at(0));
-  return in_attrs->at(0) != -1;
+  if (common::is_int(in_attrs->at(0))) {
+    TYPE_ASSIGN_CHECK(*out_attrs, 0, mshadow::kFloat64);
+  } else {
+    TYPE_ASSIGN_CHECK(*out_attrs, 0, in_attrs->at(0));
+    TYPE_ASSIGN_CHECK(*in_attrs, 0, out_attrs->at(0));
+  }
+  return out_attrs->at(0) != -1;
 }
 
 inline void PrintErrorMessage(const std::string& op_name, const int dtype1, const int dtype2) {

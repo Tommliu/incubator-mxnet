@@ -226,7 +226,7 @@ class BinaryScalarOp : public UnaryOp {
  public:
   template<typename OP>
   static void Compute_(const nnvm::NodeAttrs &attrs,
-                       mshadow::Stream<cpu>* s,
+                       mshadow::Stream<cpu>* s,     
                        const std::vector<TBlob> &inputs,
                        const std::vector<OpReqType> &req,
                        const std::vector<TBlob> &outputs) {
@@ -235,7 +235,7 @@ class BinaryScalarOp : public UnaryOp {
     using namespace mshadow;
     using namespace mshadow::expr;
     const double alpha = nnvm::get<double>(attrs.parsed);
-    MSHADOW_TYPE_SWITCH(outputs[0].type_flag_, DType, {
+    MSHADOW_REAL_TYPE_SWITCH(outputs[0].type_flag_, DType, {
       MXNET_ASSIGN_REQ_SWITCH(req[0], Req, {
         mxnet_op::Kernel<mxnet_op::op_with_req<OP, Req>, cpu>::Launch(
           s, inputs[0].Size(), outputs[0].dptr<DType>(), inputs[0].dptr<DType>(), DType(alpha));
@@ -259,7 +259,21 @@ class BinaryScalarOp : public UnaryOp {
                       const std::vector<OpReqType> &req,
                       const std::vector<TBlob> &outputs) {
     mshadow::Stream<xpu> *s = ctx.get_stream<xpu>();
-    Compute_<OP>(attrs, s, inputs, req, outputs);
+    using namespace mshadow;
+    using namespace mshadow::expr;
+    TBlob temp_tblob;
+    MSHADOW_REAL_TYPE_SWITCH(outputs[0].type_flag_, DType, {
+      if (common::is_int(inputs[0].type_flag_)) {
+        Tensor<xpu, 1, DType> temp_tensor =
+            ctx.requested[0].get_space_typed<xpu, 1, DType>(Shape1(inputs[0].Size()), s);
+        temp_tblob = TBlob(temp_tensor);
+        CastCompute<xpu>(attrs, ctx, {inputs[0]}, {kWriteTo}, {temp_tblob});
+      } else {
+        temp_tblob = inputs[0];
+      }
+    });
+    std::vector<TBlob> input{temp_tblob};
+    Compute_<OP>(attrs, s, input, req, outputs);
   }
 
   template<typename xpu, typename OP>
