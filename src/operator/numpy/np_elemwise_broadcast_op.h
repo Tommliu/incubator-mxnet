@@ -41,7 +41,7 @@ inline bool NumpyBinaryScalarType(const nnvm::NodeAttrs& attrs,
   CHECK_EQ(in_attrs->size(), 1U);
   CHECK_EQ(out_attrs->size(), 1U);
   if (common::is_int(in_attrs->at(0))) {
-    TYPE_ASSIGN_CHECK(*out_attrs, 0, mshadow::kFloat64);
+    TYPE_ASSIGN_CHECK(*out_attrs, 0, mshadow::kFloat32);
   } else {
     TYPE_ASSIGN_CHECK(*out_attrs, 0, in_attrs->at(0));
     TYPE_ASSIGN_CHECK(*in_attrs, 0, out_attrs->at(0));

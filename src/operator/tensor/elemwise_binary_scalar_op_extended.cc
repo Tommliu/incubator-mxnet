@@ -121,6 +121,10 @@ Example::
                                 [](const NodeAttrs& attrs){
                                   return std::vector<std::pair<int, int> >{{0, 0}};
                                 })
+.set_attr<FResourceRequest>("FResourceRequest",
+  [](const NodeAttrs& attrs) {
+    return std::vector<ResourceRequest>{ResourceRequest::kTempSpace};
+  })
 .add_argument("data", "NDArray-or-Symbol", "source input")
 .add_argument("scalar", "float", "scalar input")
 .set_attr<FCompute>("FCompute<cpu>", BinaryScalarOp::Compute<cpu, mshadow_op::smooth_l1_loss>)

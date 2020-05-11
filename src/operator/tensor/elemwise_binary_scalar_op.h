@@ -226,7 +226,7 @@ class BinaryScalarOp : public UnaryOp {
  public:
   template<typename OP>
   static void Compute_(const nnvm::NodeAttrs &attrs,
-                       mshadow::Stream<cpu>* s,     
+                       mshadow::Stream<cpu>* s,
                        const std::vector<TBlob> &inputs,
                        const std::vector<OpReqType> &req,
                        const std::vector<TBlob> &outputs) {
@@ -235,7 +235,7 @@ class BinaryScalarOp : public UnaryOp {
     using namespace mshadow;
     using namespace mshadow::expr;
     const double alpha = nnvm::get<double>(attrs.parsed);
-    MSHADOW_REAL_TYPE_SWITCH(outputs[0].type_flag_, DType, {
+    MSHADOW_TYPE_SWITCH(outputs[0].type_flag_, DType, {
       MXNET_ASSIGN_REQ_SWITCH(req[0], Req, {
         mxnet_op::Kernel<mxnet_op::op_with_req<OP, Req>, cpu>::Launch(
           s, inputs[0].Size(), outputs[0].dptr<DType>(), inputs[0].dptr<DType>(), DType(alpha));
@@ -262,7 +262,7 @@ class BinaryScalarOp : public UnaryOp {
     using namespace mshadow;
     using namespace mshadow::expr;
     TBlob temp_tblob;
-    MSHADOW_REAL_TYPE_SWITCH(outputs[0].type_flag_, DType, {
+    MSHADOW_TYPE_SWITCH(outputs[0].type_flag_, DType, {
       if (common::is_int(inputs[0].type_flag_)) {
         Tensor<xpu, 1, DType> temp_tensor =
             ctx.requested[0].get_space_typed<xpu, 1, DType>(Shape1(inputs[0].Size()), s);
@@ -310,8 +310,8 @@ class BinaryScalarOp : public UnaryOp {
     const double alpha = nnvm::get<double>(attrs.parsed);
     TBlob temp_tblob;
     if (common::is_int(inputs[0].type_flag_)) {
-      Tensor<xpu, 1, double> temp_tensor =
-          ctx.requested[0].get_space_typed<xpu, 1, double>(Shape1(inputs[0].Size()), s);
+      Tensor<xpu, 1, float> temp_tensor =
+          ctx.requested[0].get_space_typed<xpu, 1, float>(Shape1(inputs[0].Size()), s);
       temp_tblob = TBlob(temp_tensor);
       CastCompute<xpu>(attrs, ctx, {inputs[0]}, {kWriteTo}, {temp_tblob});
     } else {
@@ -418,20 +418,24 @@ class BinaryScalarOp : public UnaryOp {
   }
 };
 
-#define MXNET_OPERATOR_REGISTER_BINARY_SCALAR(name)                 \
-  NNVM_REGISTER_OP(name)                                            \
-  .set_num_inputs(1)                                                \
-  .set_num_outputs(1)                                               \
-  .set_attr_parser([](NodeAttrs* attrs) {                           \
-      attrs->parsed = std::stod(attrs->dict["scalar"]);             \
-    })                                                              \
-  .set_attr<mxnet::FInferShape>("FInferShape", ElemwiseShape<1, 1>)  \
-  .set_attr<nnvm::FInferType>("FInferType", ElemwiseType<1, 1>)     \
-  .set_attr<nnvm::FInplaceOption>("FInplaceOption",                 \
-    [](const NodeAttrs& attrs){                                     \
-      return std::vector<std::pair<int, int> >{{0, 0}};             \
-    })                                                              \
-  .add_argument("data", "NDArray-or-Symbol", "source input")        \
+#define MXNET_OPERATOR_REGISTER_BINARY_SCALAR(name)                       \
+  NNVM_REGISTER_OP(name)                                                  \
+  .set_num_inputs(1)                                                      \
+  .set_num_outputs(1)                                                     \
+  .set_attr_parser([](NodeAttrs* attrs) {                                 \
+      attrs->parsed = std::stod(attrs->dict["scalar"]);                   \
+    })                                                                    \
+  .set_attr<mxnet::FInferShape>("FInferShape", ElemwiseShape<1, 1>)       \
+  .set_attr<nnvm::FInferType>("FInferType", ElemwiseType<1, 1>)           \
+  .set_attr<nnvm::FInplaceOption>("FInplaceOption",                       \
+    [](const NodeAttrs& attrs){                                           \
+      return std::vector<std::pair<int, int> >{{0, 0}};                   \
+    })                                                                    \
+  .set_attr<FResourceRequest>("FResourceRequest",                         \
+    [](const NodeAttrs& attrs) {                                          \
+      return std::vector<ResourceRequest>{ResourceRequest::kTempSpace};   \
+    })                                                                    \
+  .add_argument("data", "NDArray-or-Symbol", "source input")              \
   .add_argument("scalar", "float", "scalar input")
 
 }  // namespace op
