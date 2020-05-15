@@ -103,9 +103,7 @@ NNVM_REGISTER_OP(_backward_npi_broadcast_div)
 NNVM_REGISTER_OP(_npi_true_divide_scalar)
 .set_num_inputs(1)
 .set_num_outputs(1)
-.set_attr_parser([](NodeAttrs* attrs) {
-    attrs->parsed = std::stod(attrs->dict["scalar"]);
-  })
+.set_attr_parser(ParamParser<NumpyBinaryScalarParam>)
 .set_attr<mxnet::FInferShape>("FInferShape", ElemwiseShape<1, 1>)
 .set_attr<nnvm::FInferType>("FInferType", TrueDivideType<1>)
 .set_attr<nnvm::FInplaceOption>("FInplaceOption",
@@ -126,9 +124,7 @@ NNVM_REGISTER_OP(_npi_true_divide_scalar)
 NNVM_REGISTER_OP(_npi_rtrue_divide_scalar)
 .set_num_inputs(1)
 .set_num_outputs(1)
-.set_attr_parser([](NodeAttrs* attrs) {
-  attrs->parsed = std::stod(attrs->dict["scalar"]);
-  })
+.set_attr_parser(ParamParser<NumpyBinaryScalarParam>)
 .set_attr<mxnet::FInferShape>("FInferShape", ElemwiseShape<1, 1>)
 .set_attr<nnvm::FInferType>("FInferType", TrueDivideType<1>)
 .set_attr<nnvm::FInplaceOption>("FInplaceOption",

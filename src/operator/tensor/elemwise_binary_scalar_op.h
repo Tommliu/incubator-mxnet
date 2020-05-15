@@ -35,6 +35,26 @@
 namespace mxnet {
 namespace op {
 
+struct NumpyBinaryScalarParam : public dmlc::Parameter<NumpyBinaryScalarParam> {
+  double value;
+  bool is_int;
+  DMLC_DECLARE_PARAMETER(NumpyBinaryScalarParam) {
+    DMLC_DECLARE_FIELD(value)
+    .describe("Scalar input value");
+    DMLC_DECLARE_FIELD(is_int)
+    .set_default(false)
+    .describe("Indicate whether scalar input is int type");
+  }
+
+  void SetAttrDict(std::unordered_map<std::string, std::string>* dict) {
+    std::ostringstream value_s, is_int_s;
+    value_s << value;
+    is_int_s << is_int;
+    (*dict)["value"] = value_s.str();
+    (*dict)["is_int"] = is_int_s.str();
+  }
+};
+
 class BinaryScalarOp : public UnaryOp {
   /*! \brief Tensor operation against a scalar with a dense result */
   template<typename OP, typename DType, typename IType>
@@ -234,7 +254,8 @@ class BinaryScalarOp : public UnaryOp {
     DCHECK_EQ(outputs.size(), 1);
     using namespace mshadow;
     using namespace mshadow::expr;
-    const double alpha = nnvm::get<double>(attrs.parsed);
+    const NumpyBinaryScalarParam& param = nnvm::get<NumpyBinaryScalarParam>(attrs.parsed);
+    const double alpha = param.value;
     MSHADOW_TYPE_SWITCH(outputs[0].type_flag_, DType, {
       MXNET_ASSIGN_REQ_SWITCH(req[0], Req, {
         mxnet_op::Kernel<mxnet_op::op_with_req<OP, Req>, cpu>::Launch(
@@ -262,8 +283,11 @@ class BinaryScalarOp : public UnaryOp {
     using namespace mshadow;
     using namespace mshadow::expr;
     TBlob temp_tblob;
+    const NumpyBinaryScalarParam& param = nnvm::get<NumpyBinaryScalarParam>(attrs.parsed);
+    bool scalar_is_int = param.is_int;
     MSHADOW_TYPE_SWITCH(outputs[0].type_flag_, DType, {
-      if (common::is_int(inputs[0].type_flag_)) {
+      if ((common::is_int(inputs[0].type_flag_) && !scalar_is_int) ||
+          (inputs[0].type_flag_ == kBool)) {
         Tensor<xpu, 1, DType> temp_tensor =
             ctx.requested[0].get_space_typed<xpu, 1, DType>(Shape1(inputs[0].Size()), s);
         temp_tblob = TBlob(temp_tensor);
@@ -307,11 +331,13 @@ class BinaryScalarOp : public UnaryOp {
     using namespace mshadow;
     using namespace mshadow::expr;
     Stream<xpu> *s = ctx.get_stream<xpu>();
-    const double alpha = nnvm::get<double>(attrs.parsed);
+    const NumpyBinaryScalarParam& param = nnvm::get<NumpyBinaryScalarParam>(attrs.parsed);
+    bool scalar_is_int = param.is_int;
+    const double alpha = param.value;
     TBlob temp_tblob;
-    if (common::is_int(inputs[0].type_flag_)) {
-      Tensor<xpu, 1, float> temp_tensor =
-          ctx.requested[0].get_space_typed<xpu, 1, float>(Shape1(inputs[0].Size()), s);
+    if (common::is_int(inputs[0].type_flag_) && !scalar_is_int) {
+      Tensor<xpu, 1, double> temp_tensor =
+          ctx.requested[0].get_space_typed<xpu, 1, double>(Shape1(inputs[0].Size()), s);
       temp_tblob = TBlob(temp_tensor);
       CastCompute<xpu>(attrs, ctx, {inputs[0]}, {kWriteTo}, {temp_tblob});
     } else {
@@ -414,6 +440,17 @@ class BinaryScalarOp : public UnaryOp {
     using namespace mshadow;
     using namespace mshadow::expr;
     Stream<xpu> *s = ctx.get_stream<xpu>();
+    // const NumpyBinaryScalarParam& param = nnvm::get<NumpyBinaryScalarParam>(attrs.parsed);
+    // bool scalar_is_int = param.is_int;
+    // TBlob temp_tblob;
+    // if (common::is_int(inputs[0].type_flag_) && !scalar_is_int) {
+    //   Tensor<xpu, 1, double> temp_tensor =
+    //       ctx.requested[0].get_space_typed<xpu, 1, double>(Shape1(inputs[0].Size()), s);
+    //   temp_tblob = TBlob(temp_tensor);
+    //   CastCompute<xpu>(attrs, ctx, {inputs[0]}, {kWriteTo}, {temp_tblob});
+    // } else {
+    //   temp_tblob = inputs[0];
+    // }
     Backward_<OP>(attrs, s, inputs, req, outputs);
   }
 };

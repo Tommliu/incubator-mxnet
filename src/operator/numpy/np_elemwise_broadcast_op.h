@@ -40,9 +40,14 @@ inline bool NumpyBinaryScalarType(const nnvm::NodeAttrs& attrs,
                            std::vector<int>* out_attrs) {
   CHECK_EQ(in_attrs->size(), 1U);
   CHECK_EQ(out_attrs->size(), 1U);
-  if (common::is_int(in_attrs->at(0))) {
-    TYPE_ASSIGN_CHECK(*out_attrs, 0, mshadow::kFloat32);
-  } else {
+  const NumpyBinaryScalarParam& param = nnvm::get<NumpyBinaryScalarParam>(attrs.parsed);
+  bool scalar_is_int = param.is_int;
+  if (common::is_int(in_attrs->at(0)) && !scalar_is_int) {
+    TYPE_ASSIGN_CHECK(*out_attrs, 0, mshadow::kFloat64);
+  } else if (in_attrs->at(0) == mshadow::kBool) {
+    TYPE_ASSIGN_CHECK(*out_attrs, 0, scalar_is_int ? mshadow::kInt64 : mshadow::kFloat64);
+  }
+  else {
     TYPE_ASSIGN_CHECK(*out_attrs, 0, in_attrs->at(0));
     TYPE_ASSIGN_CHECK(*in_attrs, 0, out_attrs->at(0));
   }

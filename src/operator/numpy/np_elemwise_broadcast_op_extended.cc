@@ -33,9 +33,7 @@ namespace op {
   NNVM_REGISTER_OP(name)                                                  \
   .set_num_inputs(1)                                                      \
   .set_num_outputs(1)                                                     \
-  .set_attr_parser([](NodeAttrs* attrs) {                                 \
-      attrs->parsed = std::stod(attrs->dict["scalar"]);                   \
-    })                                                                    \
+  .set_attr_parser(ParamParser<NumpyBinaryScalarParam>)                   \
   .set_attr<mxnet::FInferShape>("FInferShape", ElemwiseShape<1, 1>)       \
   .set_attr<nnvm::FInferType>("FInferType", NumpyBinaryScalarType)        \
   .set_attr<nnvm::FInplaceOption>("FInplaceOption",                       \
@@ -47,7 +45,7 @@ namespace op {
       return std::vector<ResourceRequest>{ResourceRequest::kTempSpace};   \
     })                                                                    \
   .add_argument("data", "NDArray-or-Symbol", "source input")              \
-  .add_argument("scalar", "float", "scalar input")
+  .add_arguments(NumpyBinaryScalarParam::__FIELDS__())
 
 MXNET_OPERATOR_REGISTER_BINARY_BROADCAST(_npi_copysign)
 .describe(R"code()code" ADD_FILELINE)
@@ -90,9 +88,7 @@ NNVM_REGISTER_OP(_npi_lcm)
 NNVM_REGISTER_OP(_npi_lcm_scalar)
 .set_num_inputs(1)
 .set_num_outputs(1)
-.set_attr_parser([](NodeAttrs* attrs) {
-    attrs->parsed = std::stod(attrs->dict["scalar"]);
-  })
+.set_attr_parser(ParamParser<NumpyBinaryScalarParam>)
 .set_attr<mxnet::FInferShape>("FInferShape", ElemwiseShape<1, 1>)
 .set_attr<nnvm::FInferType>("FInferType", ElemwiseIntType<1, 1>)
 .set_attr<nnvm::FInplaceOption>("FInplaceOption",
@@ -105,7 +101,7 @@ NNVM_REGISTER_OP(_npi_lcm_scalar)
     })
 .set_attr<nnvm::FGradient>("FGradient", MakeZeroGradNodes)
 .add_argument("data", "NDArray-or-Symbol", "source input")
-.add_argument("scalar", "int", "scalar input")
+.add_arguments(NumpyBinaryScalarParam::__FIELDS__())
 .set_attr<FCompute>("FCompute<cpu>", BinaryScalarOp::Compute<cpu, mshadow_op::lcm>);
 
 NNVM_REGISTER_OP(_npi_bitwise_and)
@@ -282,14 +278,14 @@ MXNET_OPERATOR_REGISTER_NP_BINARY_SCALAR(_npi_rarctan2_scalar)
 .set_attr<nnvm::FGradient>("FGradient", ElemwiseGradUseIn{"_backward_npi_rarctan2_scalar"});
 
 MXNET_OPERATOR_REGISTER_BINARY(_backward_npi_arctan2_scalar)
-.add_argument("scalar", "float", "scalar value")
-.set_attr_parser([](NodeAttrs *attrs) { attrs->parsed = std::stod(attrs->dict["scalar"]); })
+.add_arguments(NumpyBinaryScalarParam::__FIELDS__())
+.set_attr_parser(ParamParser<NumpyBinaryScalarParam>)
 .set_attr<FCompute>("FCompute<cpu>",
                     BinaryScalarOp::Backward<cpu, mshadow_op::arctan2_grad>);
 
 MXNET_OPERATOR_REGISTER_BINARY(_backward_npi_rarctan2_scalar)
-.add_argument("scalar", "float", "scalar value")
-.set_attr_parser([](NodeAttrs *attrs) { attrs->parsed = std::stod(attrs->dict["scalar"]); })
+.add_arguments(NumpyBinaryScalarParam::__FIELDS__())
+.set_attr_parser(ParamParser<NumpyBinaryScalarParam>)
 .set_attr<FCompute>("FCompute<cpu>",
                     BinaryScalarOp::Backward<cpu, mshadow_op::arctan2_rgrad>);
 
@@ -370,13 +366,13 @@ NNVM_REGISTER_OP(_backward_npi_ldexp)
                                                                   mshadow_op::ldexp_rgrad>);
 
 MXNET_OPERATOR_REGISTER_BINARY(_backward_npi_ldexp_scalar)
-.add_argument("scalar", "float", "scalar value")
-.set_attr_parser([](NodeAttrs *attrs) { attrs->parsed = std::stod(attrs->dict["scalar"]); })
+.add_arguments(NumpyBinaryScalarParam::__FIELDS__())
+.set_attr_parser(ParamParser<NumpyBinaryScalarParam>)
 .set_attr<FCompute>("FCompute<cpu>", BinaryScalarOp::Backward<cpu, mshadow_op::ldexp_grad>);
 
 MXNET_OPERATOR_REGISTER_BINARY(_backward_npi_rldexp_scalar)
-.add_argument("scalar", "float", "scalar value")
-.set_attr_parser([](NodeAttrs *attrs) { attrs->parsed = std::stod(attrs->dict["scalar"]); })
+.add_arguments(NumpyBinaryScalarParam::__FIELDS__())
+.set_attr_parser(ParamParser<NumpyBinaryScalarParam>)
 .set_attr<FCompute>("FCompute<cpu>", BinaryScalarOp::Backward<cpu, mshadow_op::rldexp_grad>);
 
 }  // namespace op
